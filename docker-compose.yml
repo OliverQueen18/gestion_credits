@@ -1,0 +1,65 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gestion-credit:latest
+    restart: unless-stopped
+    ports:
+      - "${DOCKER_APP_PORT:-8080}:80"
+    environment:
+      APP_NAME: "Gestion de Credit"
+      APP_ENV: production
+      APP_DEBUG: "${DOCKER_APP_DEBUG:-false}"
+      APP_URL: "${DOCKER_APP_URL:-http://localhost:8080}"
+      APP_KEY: "${DOCKER_APP_KEY:-}"
+      APP_LOCALE: fr
+      APP_FALLBACK_LOCALE: fr
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: "${DOCKER_LOG_LEVEL:-info}"
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: "${DOCKER_DB_DATABASE:-gestion_credit}"
+      DB_USERNAME: "${DOCKER_DB_USERNAME:-gestion}"
+      DB_PASSWORD: "${DOCKER_DB_PASSWORD:-changeme_docker}"
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: public
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - app_storage:/var/www/html/storage/app
+      - app_logs:/var/www/html/storage/logs
+    networks:
+      - interne
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: "${DOCKER_DB_DATABASE:-gestion_credit}"
+      MYSQL_USER: "${DOCKER_DB_USERNAME:-gestion}"
+      MYSQL_PASSWORD: "${DOCKER_DB_PASSWORD:-changeme_docker}"
+      MYSQL_ROOT_PASSWORD: "${DOCKER_DB_ROOT_PASSWORD:-changeme_root}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - interne
+
+volumes:
+  mysql_data:
+  app_storage:
+  app_logs:
+
+networks:
+  interne:
+    driver: bridge
