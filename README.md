@@ -40,6 +40,34 @@ Les fichiers Excel (`BD/`) ne sont pas importés au démarrage. Après copie dan
 docker compose --env-file .env.docker exec app php artisan import:excel --execute
 ```
 
+## Déploiement sur le serveur OliveApps (prod)
+
+Le serveur utilise déjà `nginx-proxy` + Let’s Encrypt. Gestion de Crédit s’ajoute comme les autres apps (ERDV, Tontine) : **pas de port 80/443 publié**, le reverse proxy route via `VIRTUAL_HOST`.
+
+1. Créez deux enregistrements DNS **A** vers l’IP du serveur :
+   - `credit.olive-services.net`
+   - `phpmyadmin-credit.olive-services.net`
+2. Sur le serveur, dans `/home/adminubuntu/OliveApps` :
+
+```bash
+# Copier docker-compose.yml et Prod.env mis à jour, puis :
+mkdir -p uploads/CREDIT
+git clone https://github.com/OliverQueen18/gestion_credits.git gestion-credit
+# Mettre des mots de passe forts dans Prod.env (CREDIT_DB_PASS / CREDIT_DB_ROOT)
+cp Prod.env .env
+docker compose up -d --build mysql-credit app-credit phpmyadmin-credit
+```
+
+3. Connexion : `https://credit.olive-services.net` — `admin` / `ChangeMe!2026` (à changer tout de suite).
+   phpMyAdmin : `https://phpmyadmin-credit.olive-services.net`
+4. Import Excel (optionnel) :
+
+```bash
+docker compose exec app-credit php artisan import:excel --execute
+```
+
+Le HTTPS est émis automatiquement par Let’s Encrypt dès que le DNS pointe vers le serveur.
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
