@@ -85,8 +85,8 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@vps116047" '
                       set -e
                       cd ${OLIVEAPPS_DIR}
-                      sudo docker pull ${DOCKER_IMAGE}:latest
-                      sudo docker compose up -d app-credit
+                      docker pull ${DOCKER_IMAGE}:latest
+                      docker compose up -d app-credit
                     '
                     """
                 }
