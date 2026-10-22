@@ -22,7 +22,6 @@ pipeline {
         DOCKER_BUILDKIT = '1'
         COMPOSE_DOCKER_CLI_BUILD = '1'
         OLIVEAPPS_DIR = '/home/adminubuntu/OliveApps'
-        VPS_SSH = 'adminubuntu@vps116047'
     }
 
     stages {
@@ -77,9 +76,13 @@ pipeline {
                 expression { params.PUSH_DOCKER }
             }
             steps {
-                sshagent(credentials: ['ssh-server-credentials']) {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ssh-server-credentials',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${VPS_SSH} '
+                    ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@vps116047" '
                       set -e
                       cd ${OLIVEAPPS_DIR}
                       sudo docker pull ${DOCKER_IMAGE}:latest
