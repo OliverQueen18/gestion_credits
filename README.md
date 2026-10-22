@@ -4,7 +4,7 @@ Application Laravel de gestion de portefeuille (clients, crédits, remboursement
 
 ## Déploiement Docker
 
-Prérequis : [Docker](https://docs.docker.com/get-docker/) et Docker Compose v2.
+Prérequis : [Docker](https://docs.docker.com/get-docker/) et Docker Compose v2. L’image applicative utilise **PHP 8.5** (dernière version stable, compatible Laravel 12).
 
 ```bash
 docker compose --env-file .env.docker up -d --build

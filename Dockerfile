@@ -21,7 +21,7 @@ COPY routes ./routes
 COPY artisan ./
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
-FROM php:8.3-fpm-bookworm
+FROM php:8.5-fpm-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx \

@@ -14,20 +14,15 @@ pipeline {
             defaultValue: true,
             description: 'Pousser l’image vers Docker Hub'
         )
-        booleanParam(
-            name: 'DEPLOY_PROD',
-            defaultValue: false,
-            description: 'Sur le serveur OliveApps : docker compose pull + up app-credit'
-        )
     }
 
     environment {
-        // Doit correspondre à image: dans OliveApps docker-compose.yml
         DOCKER_IMAGE = 'oliverqueen18/gestion-credit'
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_BUILDKIT = '1'
         COMPOSE_DOCKER_CLI_BUILD = '1'
         OLIVEAPPS_DIR = '/home/adminubuntu/OliveApps'
+        VPS_SSH = 'adminubuntu@vps116047'
     }
 
     stages {
@@ -77,18 +72,18 @@ pipeline {
             }
         }
 
-        stage('Deploy OliveApps') {
+        stage('Deploy VPS') {
             when {
-                expression { params.PUSH_DOCKER && params.DEPLOY_PROD }
+                expression { params.PUSH_DOCKER }
             }
             steps {
-                sshagent(credentials: ['oliveapps-ssh']) {
+                sshagent(credentials: ['ssh-server-credentials']) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no adminubuntu@olive-services.net '
+                    ssh -o StrictHostKeyChecking=no ${VPS_SSH} '
                       set -e
                       cd ${OLIVEAPPS_DIR}
-                      docker pull ${DOCKER_IMAGE}:latest
-                      docker compose up -d app-credit
+                      sudo docker pull ${DOCKER_IMAGE}:latest
+                      sudo docker compose up -d app-credit
                     '
                     """
                 }
@@ -98,7 +93,7 @@ pipeline {
 
     post {
         success {
-            echo "Image ${DOCKER_IMAGE}:${DOCKER_TAG} (${env.GIT_SHA}) construite."
+            echo "Image ${DOCKER_IMAGE}:${DOCKER_TAG} (${env.GIT_SHA}) construite et déployée sur le VPS."
         }
         failure {
             echo 'Pipeline Gestion de Credit échoué.'
